@@ -6,7 +6,7 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    doDownload();
+    doRequest();
 }
 
 MainWindow::~MainWindow()
@@ -14,21 +14,22 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::doDownload() {
-    QNetworkRequest request;
+void MainWindow::doRequest() {
+    manager = new QNetworkAccessManager(this);
+
     QSslConfiguration sSlConfig;
     sSlConfig.setDefaultConfiguration(QSslConfiguration::defaultConfiguration());
     sSlConfig.setProtocol(QSsl::TlsV1_2);
 
+    QNetworkRequest request;
     request.setSslConfiguration(sSlConfig);
     request.setUrl(QUrl("https://info.niekun.net"));
     request.setRawHeader("User-Agent", "MyOwnBrowser 1.0");
 
-    manager = new QNetworkAccessManager(this);
-
     manager->get(request);
 
-    connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(replyFinished(QNetworkReply*)));
+    connect(manager, &QNetworkAccessManager::finished, this, &MainWindow::replyFinished);
+    connect(manager, &QNetworkAccessManager::finished, manager, &QNetworkAccessManager::deleteLater);
 }
 
 void MainWindow::replyFinished(QNetworkReply * reply) {
@@ -45,20 +46,9 @@ void MainWindow::replyFinished(QNetworkReply * reply) {
         qDebug() << reply->header(QNetworkRequest::ContentLengthHeader).toULongLong();
         qDebug() << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
         qDebug() << reply->attribute(QNetworkRequest::HttpReasonPhraseAttribute).toString();
-
-        //qDebug() << reply->readAll();
+        qDebug() << "-----------------------";
+        qDebug().noquote() << reply->readAll();
 
         ui->textBrowser->setText(reply->readAll());
-        QFile file("./downloaded.txt");
-        if(file.open(QIODevice::WriteOnly))
-        {
-            file.resize(0);
-            file.write(reply->readAll());
-            file.close();
-        } else {
-            qDebug() << "open failed";
-        }
     }
-
-    reply->deleteLater();
 }

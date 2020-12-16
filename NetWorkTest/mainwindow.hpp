@@ -2,10 +2,8 @@
 #define MAINWINDOW_HPP
 
 #include <QMainWindow>
-#include <QtNetwork/QNetworkAccessManager>
+#include <QNetworkAccessManager>
 #include <QNetworkReply>
-#include <QFile>
-
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -18,12 +16,10 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
-    void doDownload();
+    void doRequest();
 
 private:
     Ui::MainWindow *ui;
-    void slotReadyRead();
-    void slotError();
     QNetworkAccessManager *manager;
 
 private slots:
